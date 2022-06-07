@@ -3,7 +3,8 @@ const AWS = require('aws-sdk')
 const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
-const _ = require('lodash')
+const _ = require('lodash');
+const { Console } = require('console');
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -56,18 +57,36 @@ module.exports = {
             Bucket: process.env.AWS_BUCKET_NAME,
             Prefix: dirPath
         }).promise()
-        data.Contents.forEach(o => {
-            let fileName = o.Key.split('/')[o.Key.split('/').length - 1]
+        console.log(data)
+        for (const obj of data.Contents) {
+            let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
             console.log(fileName)
-            let readStream = s3.getObject({Bucket: process.env.AWS_BUCKET_NAME, Key: o.Key}).createReadStream()
-            let writeStream = fs.createWriteStream(path.join(__dirname, `../results/${fileName}`))
+            let readStream = await s3.getObject({Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key}).createReadStream()
+            let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/${fileName}`))
             readStream.pipe(writeStream)
-        })
-        // console.log(data)
+        }
         res.send("Arquivos baixados")
     },
 
     analyzeResults: async (req, res) => {
+        const resultsData = []
+        dirPath = './results/'
+        const results = await fsPromises.readdir(dirPath)
+        for (const file of results) {
+            const data = await fsPromises.readFile(dirPath + file, {encoding: 'utf8'})
+            resultsData.push(data)
+        }
+        totalExecTime = 0
+        largestTime = 0
+        smallestTime = resultsData[0].split('\n')[1]
+        for (o of resultsData) {
+            totalExecTime += Number(o.split('\n')[3])
+            if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
+            if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
+        }
+        console.log(totalExecTime)
+        console.log(moment.unix(smallestTime).format('DD/MM/YYYY HH:mm:ss SSS'))
+        console.log(moment.unix(largestTime).format('DD/MM/YYYY HH:mm:ss SSS'))
         res.send("Analyzing results")
     }
  }
