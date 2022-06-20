@@ -11,7 +11,10 @@ const s3 = new AWS.S3({
 
 const uploadToAWS = async (images) => {
     const startTime = moment().unix()
-    console.log("COMECANDO OS UPLOADS EM: " + moment().unix())
+    let successCount = 0
+    let errorCount = 0
+    console.log(images.length)
+    console.log("Comecou os uploads em: " + moment().unix())
     images.forEach(async o => {
         let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
         // console.log(`Imagem ${o} começou em ${moment()}`)
@@ -21,17 +24,20 @@ const uploadToAWS = async (images) => {
             Body: fileContent
         }).promise().then(
             function (data) {
-                console.log(`${moment().unix()}`)
+                successCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}`)
+                // console.log(count)
+                // console.log(`${moment().unix()}`)
                 // console.log(data)
             },
             function (err) {
-                s3.upload({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: 'images/' + o,
-                    Body: fileContent
-                })
-                console.log("Erro ao uploadar a imagem: ")
-                console.log(err)
+                errorCount++;
+                console.log("erro ao subir imagem" + moment().unix())
+                // s3.upload({
+                //     Bucket: process.env.AWS_BUCKET_NAME,
+                //     Key: 'testando3/' + o,
+                //     Body: fileContent
+                // })
             }
         )
     })

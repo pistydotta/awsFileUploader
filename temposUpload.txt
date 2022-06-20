@@ -1,3 +1,2 @@
 999 imagens:
 Timestamp_inicial Timestamp_final 
-1655764476
