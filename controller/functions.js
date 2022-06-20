@@ -19,7 +19,7 @@ const uploadToAWS = async (images) => {
         // console.log(`Imagem ${o} começou em ${moment()}`)
         s3.upload({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'testando/' + o,
+            Key: 'images/' + o,
             Body: fileContent
         }).promise().then(
             function (data) {
