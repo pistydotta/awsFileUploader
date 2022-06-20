@@ -1,0 +1,6 @@
+Para rodar:
+Deixar servidor on com node server no raspberry pi
+
+Mudar diretório de resultado na função serverless e dar deploy
+Mandar curl com POST com a quantidade de imagem
+Anotar no arquivo tempo de inicio e fim de upload

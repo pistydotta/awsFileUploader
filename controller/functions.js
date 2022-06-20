@@ -4,7 +4,6 @@ const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
 const _ = require('lodash');
-const { Console } = require('console');
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -15,10 +14,10 @@ const uploadToAWS = async (images) => {
     console.log("COMECANDO OS UPLOADS EM: " + moment())
     images.forEach(async o => {
         let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
-        console.log(`Imagem ${o} começou em ${moment()}`)
+        // console.log(`Imagem ${o} começou em ${moment()}`)
         s3.upload({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'images/' + o,
+            Key: 'testando/' + o,
             Body: fileContent
         }).promise().then(
             function (data) {
@@ -26,7 +25,7 @@ const uploadToAWS = async (images) => {
                 // console.log(data)
             },
             function (err) {
-                console.log("ALgo de errado aconteceu")
+                console.log("Erro ao uploadar a imagem: ")
                 console.log(err)
             }
         )
@@ -36,10 +35,11 @@ const uploadToAWS = async (images) => {
 
 module.exports = {
     uploadImages: async (req, res) => {
+        if(!req.body.imageQnt) return res.send("Your body should have a key named imageQnt representing the number of images to be uploaded")
         let images = await fsPromises.readdir(process.env.IMAGE_DIRECTORY)
-        let workingImages = images.slice(0, req.params.imageCount)
+        let workingImages = images.slice(0, req.body.imageQnt)
         uploadToAWS(workingImages)
-        res.send("Uploading images: " + req.params.imageCount)
+        res.send("Uploading images: " + req.body.imageQnt)
     },
 
 
@@ -50,14 +50,14 @@ module.exports = {
     },
     
     downloadResultsFromS3: async (req, res) => {
-        const pieces = req.params.path.split("_")
-        const dirPath = pieces.join('/')
-        console.log(dirPath)
+        if(!req.body.dirPath) return res.send("Your body should have a key named dirPath representing path from S3 you want to download")
+        const dirPath = req.body.dirPath
+        // console.log(dirPath)
         const data = await s3.listObjectsV2({
             Bucket: process.env.AWS_BUCKET_NAME,
             Prefix: dirPath
         }).promise()
-        console.log(data)
+        // console.log(data)
         for (const obj of data.Contents) {
             let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
             console.log(fileName)
