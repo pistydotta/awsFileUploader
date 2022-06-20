@@ -1,0 +1,2 @@
+1 imagem:
+Timestamp_inicial Timestamp_final

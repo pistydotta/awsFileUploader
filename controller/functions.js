@@ -4,6 +4,7 @@ const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
 const _ = require('lodash');
+const { start } = require('repl');
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -11,7 +12,8 @@ const s3 = new AWS.S3({
 });
 
 const uploadToAWS = async (images) => {
-    console.log("COMECANDO OS UPLOADS EM: " + moment())
+    const startTime = moment().unix()
+    console.log("COMECANDO OS UPLOADS EM: " + moment().unix())
     images.forEach(async o => {
         let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
         // console.log(`Imagem ${o} começou em ${moment()}`)
@@ -21,7 +23,7 @@ const uploadToAWS = async (images) => {
             Body: fileContent
         }).promise().then(
             function (data) {
-                console.log(`Imagem ${o} terminou em ${moment()}`)
+                console.log(`${moment().unix()}`)
                 // console.log(data)
             },
             function (err) {
@@ -30,6 +32,7 @@ const uploadToAWS = async (images) => {
             }
         )
     })
+    return startTime
 }
 // let fileContent = fs.readFileSync('/home/dotta/dev/images/00000.png')
 
@@ -38,8 +41,8 @@ module.exports = {
         if(!req.body.imageQnt) return res.send("Your body should have a key named imageQnt representing the number of images to be uploaded")
         let images = await fsPromises.readdir(process.env.IMAGE_DIRECTORY)
         let workingImages = images.slice(0, req.body.imageQnt)
-        uploadToAWS(workingImages)
-        res.send("Uploading images: " + req.body.imageQnt)
+        const startTime = await uploadToAWS(workingImages)
+        res.send("Start time: " + startTime)
     },
 
 
