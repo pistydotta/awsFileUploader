@@ -25,13 +25,14 @@ const uploadToAWS = async (images) => {
         }).promise().then(
             function (data) {
                 successCount++;
-                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}`)
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
                 // console.log(count)
                 // console.log(`${moment().unix()}`)
                 // console.log(data)
             },
             function (err) {
                 errorCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
                 console.log("erro ao subir imagem" + moment().unix())
                 // s3.upload({
                 //     Bucket: process.env.AWS_BUCKET_NAME,
