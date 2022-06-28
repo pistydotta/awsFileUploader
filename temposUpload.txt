@@ -1,2 +1,5 @@
 999 imagens:
-Timestamp_inicial Timestamp_final 
+Timestamp_inicial Timestamp_final uploadsBemSucedidos
+1656370938 1656371418 999 [0]
+1656371520 1656372058 999 [1]
+1656372353 1656372830 999 [2]

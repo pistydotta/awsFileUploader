@@ -14,7 +14,7 @@ const uploadToAWS = async (images) => {
     let successCount = 0
     let errorCount = 0
     console.log(images.length)
-    console.log("Comecou os uploads em: " + moment().unix())
+    console.log("Comecou os uploads em: " + moment().unix() + "\n")
     images.forEach(async o => {
         let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
         // console.log(`Imagem ${o} começou em ${moment()}`)
