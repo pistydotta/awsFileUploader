@@ -46,33 +46,33 @@ const uploadToAWS = async (images) => {
     const startTime = moment().unix()
     console.log("Comecou os uploads em: " + moment().unix())
     uploadTesting(images, 0, 500, iterations)
-    // images.forEach(async o => {
-    //     let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
-    //     // console.log(`Imagem ${o} começou em ${moment()}`)
-    //     s3.upload({
-    //         Bucket: process.env.AWS_BUCKET_NAME,
-    //         Key: 'images/' + o,
-    //         Body: fileContent
-    //     }).promise().then(
-    //         function (data) {
-    //             successCount++;
-    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-    //             // console.log(count)
-    //             // console.log(`${moment().unix()}`)
-    //             // console.log(data)
-    //         },
-    //         function (err) {
-    //             errorCount++;
-    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-    //             console.log("erro ao subir imagem" + moment().unix())
-    //             // s3.upload({
-    //             //     Bucket: process.env.AWS_BUCKET_NAME,
-    //             //     Key: 'testando3/' + o,
-    //             //     Body: fileContent
-    //             // })
-    //         }
-    //     )
-    // })
+    images.forEach(async o => {
+        let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
+        // console.log(`Imagem ${o} começou em ${moment()}`)
+        s3.upload({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: 'images/' + o,
+            Body: fileContent
+        }).promise().then(
+            function (data) {
+                successCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+                // console.log(count)
+                // console.log(`${moment().unix()}`)
+                // console.log(data)
+            },
+            function (err) {
+                errorCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+                console.log("erro ao subir imagem" + moment().unix())
+                // s3.upload({
+                //     Bucket: process.env.AWS_BUCKET_NAME,
+                //     Key: 'testando3/' + o,
+                //     Body: fileContent
+                // })
+            }
+        )
+    })
     return startTime
 }
 
