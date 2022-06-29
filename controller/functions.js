@@ -9,42 +9,72 @@ const s3 = new AWS.S3({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
 });
 
-const uploadToAWS = async (images) => {
-    const startTime = moment().unix()
-    let successCount = 0
-    let errorCount = 0
-    console.log(images.length)
-    console.log("Comecou os uploads em: " + moment().unix() + "\n")
-    images.forEach(async o => {
-        let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
-        // console.log(`Imagem ${o} começou em ${moment()}`)
+const uploadTesting = async (images, start, finish, iterations) => {
+    let count = 0;
+    let imagesToUpload = finish - start;
+    // console.log("Chamando funcao de uploadar")
+    // console.log("Images to upload: " + imagesToUpload)
+    // console.log("Iteration: " + iterations)
+    for (i = start; i < finish; i++) {
+        let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + images[i])
         s3.upload({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'images/' + o,
+            Key: 'testandoUploadNovo/' + images[i],
             Body: fileContent
         }).promise().then(
-            function (data) {
-                successCount++;
-                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+            function(data) {
+                count++;
                 // console.log(count)
-                // console.log(`${moment().unix()}`)
-                // console.log(data)
+                if(count == imagesToUpload && iterations == 0) {
+                    uploadTesting(images, 500, 999, 1)
+                }
+                if (count == 499 && iterations == 1) console.log(moment().unix())
             },
-            function (err) {
-                errorCount++;
-                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-                console.log("erro ao subir imagem" + moment().unix())
-                // s3.upload({
-                //     Bucket: process.env.AWS_BUCKET_NAME,
-                //     Key: 'testando3/' + o,
-                //     Body: fileContent
-                // })
+            function(err) {
+                console.log(err)
+                console.log("Erro na imagem: " + i)
             }
         )
-    })
+    }
+}
+
+const uploadToAWS = async (images) => {
+    let imageCount = images.length
+    let iterations = 0
+    let successCount = 0
+    let errorCount = 0
+    const startTime = moment().unix()
+    console.log("Comecou os uploads em: " + moment().unix())
+    uploadTesting(images, 0, 500, iterations)
+    // images.forEach(async o => {
+    //     let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
+    //     // console.log(`Imagem ${o} começou em ${moment()}`)
+    //     s3.upload({
+    //         Bucket: process.env.AWS_BUCKET_NAME,
+    //         Key: 'images/' + o,
+    //         Body: fileContent
+    //     }).promise().then(
+    //         function (data) {
+    //             successCount++;
+    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+    //             // console.log(count)
+    //             // console.log(`${moment().unix()}`)
+    //             // console.log(data)
+    //         },
+    //         function (err) {
+    //             errorCount++;
+    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+    //             console.log("erro ao subir imagem" + moment().unix())
+    //             // s3.upload({
+    //             //     Bucket: process.env.AWS_BUCKET_NAME,
+    //             //     Key: 'testando3/' + o,
+    //             //     Body: fileContent
+    //             // })
+    //         }
+    //     )
+    // })
     return startTime
 }
-// let fileContent = fs.readFileSync('/home/dotta/dev/images/00000.png')
 
 module.exports = {
     uploadImages: async (req, res) => {
