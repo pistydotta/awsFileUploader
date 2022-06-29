@@ -22,8 +22,8 @@ const uploadTesting = async (images, start, finish, iterations) => {
             Key: 'images/' + images[i],
             Body: fileContent
         }).promise().then(
-            function(data) {
-                count++;
+            async function(data) {
+                await count++;
                 // console.log(count)
                 if(count == imagesToUpload && iterations == 0) {
                     uploadTesting(images, 500, 999, 1)

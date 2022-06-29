@@ -1,3 +1,3 @@
-uploadImages: curl -X POST http://localhost:3000/uploadImages -H 'Content-Type: application/json' -d '{"imageQnt":1}'
+uploadImages: curl -X POST http://localhost:3000/uploadImages -H 'Content-Type: application/json' -d '{"imageQnt":999}'
 downloadResults: curl -X POST http://localhost:3000/downloadResultsFromS3 -H 'Content-Type: application/json' -d '{"dirPath":"results/local/500/single/0/"}'
 analyzeResults: curl http://localhost:3000/analyzeResults
