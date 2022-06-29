@@ -19,7 +19,7 @@ const uploadTesting = async (images, start, finish, iterations) => {
         let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + images[i])
         s3.upload({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'testandoUploadNovo/' + images[i],
+            Key: 'images/' + images[i],
             Body: fileContent
         }).promise().then(
             function(data) {
