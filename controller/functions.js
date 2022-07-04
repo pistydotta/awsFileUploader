@@ -4,6 +4,7 @@ const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
 const _ = require('lodash');
+const { verify } = require('crypto');
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -22,15 +23,15 @@ const uploadTesting = async (images, start, finish, iterations) => {
             Key: 'images/' + images[i],
             Body: fileContent
         }).promise().then(
-            async function(data) {
+            async function (data) {
                 await count++;
                 // console.log(count)
-                if(count == imagesToUpload && iterations == 0) {
+                if (count == imagesToUpload && iterations == 0) {
                     uploadTesting(images, 500, 999, 1)
                 }
                 if (count == 499 && iterations == 1) console.log(moment().unix())
             },
-            function(err) {
+            function (err) {
                 console.log(err)
                 console.log("Erro na imagem: " + i)
             }
@@ -86,41 +87,116 @@ module.exports = {
     downloadResultsFromS3: async (req, res) => {
         if (!req.body.dirPath) return res.send("Your body should have a key named dirPath representing path from S3 you want to download")
         const dirPath = req.body.dirPath
-        // console.log(dirPath)
-        const data = await s3.listObjectsV2({
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Prefix: dirPath
-        }).promise()
-        // console.log(data)
-        for (const obj of data.Contents) {
-            let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
-            console.log(fileName)
-            let readStream = await s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key }).createReadStream()
-            let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/${fileName}`))
-            readStream.pipe(writeStream)
+        const fileNum = dirPath.split('/')[2]
+        console.log("fileNum: " + fileNum)
+        for (i = 0; i < 10; i++) {
+            const data = await s3.listObjectsV2({
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Prefix: `${dirPath}${i}/`
+            }).promise()
+            console.log(data.Contents.length)
+            for (const obj of data.Contents) {
+                let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
+                console.log(fileName)
+                let readStream = await s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key }).createReadStream()
+                let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/${fileNum}/${i}/${fileName}`))
+                readStream.pipe(writeStream)
+            }
         }
+
         res.send("Arquivos baixados")
     },
 
-    analyzeResults: async (req, res) => {
-        const resultsData = []
-        dirPath = './results/'
-        const results = await fsPromises.readdir(dirPath)
-        for (const file of results) {
-            const data = await fsPromises.readFile(dirPath + file, { encoding: 'utf8' })
-            resultsData.push(data)
+    analyzeServerlessResults: async (req, res) => {
+        let vet = [1, 100, 500, 999]
+        for (qnt of vet) {
+            console.log(qnt)
+            for (i = 0; i < 10; i++) {
+                let resultsData = []
+                let dirPath = `./results/${qnt}/${i}/`
+                let resultPath = `./upload${qnt}.txt`
+                const uploadTimes = await fsPromises.readFile(resultPath, { encoding: 'utf8' })
+                let workingUploadTimes = uploadTimes.split('\n')
+                const results = await fsPromises.readdir(dirPath)
+                for (const file of results) {
+                    const data = await fsPromises.readFile(dirPath + file, { encoding: 'utf8' })
+                    resultsData.push(data)
+                }
+                let totalExecTime = 0
+                let largestTime = 0
+                let smallestTime = resultsData[0].split('\n')[1]
+                for (o of resultsData) {
+                    totalExecTime += Number(o.split('\n')[3])
+                    if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
+                    if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
+                }
+                console.log(i)
+                console.log("Total_exec_time: " + totalExecTime)
+                console.log("Smallest_time: " + smallestTime)
+                console.log("Largest_time: " + largestTime)
+                console.log("Runtime: " + (largestTime - smallestTime))
+                console.log("Starting_Upload_time: " + workingUploadTimes[i].split(' ')[0])
+                console.log("Finishing_Upload_time: " + workingUploadTimes[i].split(' ')[1])
+                console.log("Total_upload_time: " + (workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0]))
+                console.log("Total_runtime(LargestTime-uploadStart): " + (largestTime - workingUploadTimes[i].split(' ')[0]) + "\n")
+            }
         }
-        totalExecTime = 0
-        largestTime = 0
-        smallestTime = resultsData[0].split('\n')[1]
-        for (o of resultsData) {
-            totalExecTime += Number(o.split('\n')[3])
-            if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
-            if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
-        }
-        console.log(totalExecTime)
-        console.log(moment.unix(smallestTime).format('DD/MM/YYYY HH:mm:ss SSS'))
-        console.log(moment.unix(largestTime).format('DD/MM/YYYY HH:mm:ss SSS'))
+
+
         res.send("Analyzing results")
+    },
+    analyzeLocalResults: async (req, res) => {
+        let vet = [1, 100, 500, 999]
+        // let vet = []
+        let singleUploadTimePath = "./uploadResultLocalSingle.txt"
+        let singleUploadTimes = await fsPromises.readFile(singleUploadTimePath, { encoding: 'utf8' })
+        singleUploadTimes = singleUploadTimes.split('\n')
+        let batchUploadTimePath = "./uploadResultLocalBatch.txt"
+        let batchUploadTimes = await fsPromises.readFile(batchUploadTimePath, { encoding: 'utf8' })
+        batchUploadTimes = batchUploadTimes.split('\n')
+        let j = 0
+        for (qnt of vet) {
+            console.log(qnt)
+            for (i = 0; i < 10; i++) {
+                let resultsData = []
+                let dirPath = `./results/${qnt}/${i}/`
+                const results = await fsPromises.readdir(dirPath)
+                for (const file of results) {
+                    const data = await fsPromises.readFile(dirPath + file, { encoding: 'utf8' })
+                    resultsData.push(data)
+                }
+                let largestTime = 0
+                let smallestTime = resultsData[0].split('\n')[1]
+                for (o of resultsData) {
+                    if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
+                    if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
+                }
+                console.log(i)
+                console.log("Smallest_time: " + smallestTime)
+                console.log("Largest_time: " + largestTime)
+                console.log("Runtime: " + (largestTime - smallestTime))
+                console.log("Upload_Time_Single: " + singleUploadTimes[i + j].split(' ')[1])
+                console.log("Upload_Time_Batch: " + batchUploadTimes[i + j].split(' ')[1] + '\n')
+            }
+            j += 10
+        }
+        res.send("analyzing results")
+    },
+
+    createFolders: async (req, res) => {
+        for (i = 0; i < 10; i++) {
+            let dir1 = `/home/dotta/dev/upload-images-aws/results/999/${i}`
+            // let dir2 = `/home/dotta/dev/upload-images-aws/results/500/batch/${i}`
+            fs.mkdir(dir1, { recursive: true }, (err) => {
+                if (err) console.log(err)
+                else console.log("Deu certo")
+            })
+
+            // fs.mkdir(dir2, { recursive: true });
+
+        }
+
+
+        res.send("Creating folders")
     }
 }
