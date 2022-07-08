@@ -4,7 +4,6 @@ const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
 const _ = require('lodash');
-const { verify } = require('crypto');
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -110,7 +109,11 @@ module.exports = {
     analyzeServerlessResults: async (req, res) => {
         let vet = [1, 100, 500, 999]
         for (qnt of vet) {
-            console.log(qnt)
+            console.log(qnt + "\n")
+            let processingRuntime = 0
+            let totalRuntime = 0
+            let uploadTime = 0
+            let billingTime = 0
             for (i = 0; i < 10; i++) {
                 let resultsData = []
                 let dirPath = `./results/${qnt}/${i}/`
@@ -130,16 +133,22 @@ module.exports = {
                     if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
                     if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
                 }
-                console.log(i)
-                console.log("Total_exec_time: " + totalExecTime)
-                console.log("Smallest_time: " + smallestTime)
-                console.log("Largest_time: " + largestTime)
-                console.log("Runtime: " + (largestTime - smallestTime))
-                console.log("Starting_Upload_time: " + workingUploadTimes[i].split(' ')[0])
-                console.log("Finishing_Upload_time: " + workingUploadTimes[i].split(' ')[1])
-                console.log("Total_upload_time: " + (workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0]))
-                console.log("Total_runtime(LargestTime-uploadStart): " + (largestTime - workingUploadTimes[i].split(' ')[0]) + "\n")
+                // console.log(i)
+                // console.log("Total_exec_time: " + totalExecTime)
+                // console.log("Smallest_time: " + smallestTime)
+                // console.log("Largest_time: " + largestTime)
+                // console.log((largestTime - smallestTime))
+                processingRuntime += parseFloat(largestTime - smallestTime)
+                totalRuntime += parseFloat(largestTime - workingUploadTimes[i].split(' ')[0])
+                uploadTime += parseFloat(workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0])
+                billingTime += parseFloat(totalExecTime)
+                // console.log("Starting_Upload_time: " + workingUploadTimes[i].split(' ')[0])
+                // console.log("Finishing_Upload_time: " + workingUploadTimes[i].split(' ')[1])
+                // console.log((workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0]))
+                // console.log((largestTime - workingUploadTimes[i].split(' ')[0]))
+                console.log((smallestTime - workingUploadTimes[i].split(' ')[1]))
             }
+            // console.log(`${processingRuntime/10} ${totalRuntime/10} ${uploadTime/10} ${billingTime/10}`)
         }
 
 
@@ -155,7 +164,11 @@ module.exports = {
         let batchUploadTimes = await fsPromises.readFile(batchUploadTimePath, { encoding: 'utf8' })
         batchUploadTimes = batchUploadTimes.split('\n')
         let j = 0
+
         for (qnt of vet) {
+            let runTimeSum = 0
+            let uploadSingleSum = 0
+            let uploadBatchSum = 0
             console.log(qnt)
             for (i = 0; i < 10; i++) {
                 let resultsData = []
@@ -171,15 +184,24 @@ module.exports = {
                     if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
                     if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
                 }
-                console.log(i)
-                console.log("Smallest_time: " + smallestTime)
-                console.log("Largest_time: " + largestTime)
-                console.log("Runtime: " + (largestTime - smallestTime))
-                console.log("Upload_Time_Single: " + singleUploadTimes[i + j].split(' ')[1])
-                console.log("Upload_Time_Batch: " + batchUploadTimes[i + j].split(' ')[1] + '\n')
+                // console.log(i)
+                // console.log("Smallest_time: " + smallestTime)
+                // console.log("Largest_time: " + largestTime)
+                // console.log((largestTime - smallestTime))
+                runTimeSum += parseFloat(largestTime - smallestTime)
+                // console.log(singleUploadTimes[i + j].split(' ')[1])
+                uploadSingleSum += parseFloat(singleUploadTimes[i + j].split(' ')[1])
+                console.log(batchUploadTimes[i + j].split(' ')[1])
+                uploadBatchSum += parseFloat(batchUploadTimes[i + j].split(' ')[1])
             }
+            // runTimeSum /= 10
+            // uploadSingleSum /= 10
+            // uploadBatchSum /= 10
+            // console.log(`${runTimeSum} ${uploadSingleSum} ${uploadBatchSum}`)
+
             j += 10
         }
+
         res.send("analyzing results")
     },
 
