@@ -42,6 +42,8 @@ const uploadToAWS = async (images) => {
     let successCount = 0
     let errorCount = 0
     const startTime = moment().unix()
+    const vet = [0, 1, 2, 3]
+
     console.log("Comecou os uploads em: " + moment().unix())
     // uploadTesting(images, 0, 500, iterations)
     images.forEach(async o => {
@@ -49,11 +51,11 @@ const uploadToAWS = async (images) => {
         // console.log(`Imagem ${o} começou em ${moment()}`)
         s3.upload({
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'images/' + o,
+            Key: 'tmpImages/' + o,
             Body: fileContent
         }).promise().then(
             async function (data) {
-                console.log("Uploaded image: " + o)
+                // console.log("Uploaded image: " + o)
                 await successCount++;
                 if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
             },
