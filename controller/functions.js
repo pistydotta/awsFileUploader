@@ -4,6 +4,7 @@ const fsPromises = fs.promises
 const path = require('path')
 const moment = require('moment');
 const _ = require('lodash');
+const { split } = require('lodash');
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
@@ -189,12 +190,12 @@ module.exports = {
                 // console.log(i)
                 // console.log("Smallest_time: " + smallestTime)
                 // console.log("Largest_time: " + largestTime)
-                // console.log((largestTime - smallestTime))
-                runTimeSum += parseFloat(largestTime - smallestTime)
+                console.log((largestTime - smallestTime))
+                // runTimeSum += parseFloat(largestTime - smallestTime)
                 // console.log(singleUploadTimes[i + j].split(' ')[1])
-                uploadSingleSum += parseFloat(singleUploadTimes[i + j].split(' ')[1])
-                console.log(batchUploadTimes[i + j].split(' ')[1])
-                uploadBatchSum += parseFloat(batchUploadTimes[i + j].split(' ')[1])
+                // uploadSingleSum += parseFloat(singleUploadTimes[i + j].split(' ')[1])
+                // console.log(batchUploadTimes[i + j].split(' ')[1])
+                // uploadBatchSum += parseFloat(batchUploadTimes[i + j].split(' ')[1])
             }
             // runTimeSum /= 10
             // uploadSingleSum /= 10
@@ -222,5 +223,19 @@ module.exports = {
 
 
         res.send("Creating folders")
+    },
+
+    getResults: async (req, res) => {
+        const filePath = '/home/dotta/MEGA/Faculdade/TCC/Resultados_Local.txt'
+        const data = await fsPromises.readFile(filePath, { encoding: 'utf8' })
+        const splittedData = data.split('\n')
+        for (o of splittedData) {
+            let tmp = o.split(':')
+            if (tmp.length > 1) {
+                if(tmp[0] == 'Runtime') console.log(_.replace(tmp[1], '.', ','))
+            }
+        }
+        // console.log(splittedData)
+        res.send("Blah")
     }
 }
