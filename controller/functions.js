@@ -29,7 +29,7 @@ const uploadTesting = async (images, start, finish, iterations) => {
                 if (count == imagesToUpload && iterations == 0) {
                     uploadTesting(images, 500, 999, 1)
                 }
-                if (count == 499 && iterations == 1) console.log(moment().unix())
+                if (count == 499 && iterations == 1) console.log("Terminou em: " + moment().unix())
             },
             function (err) {
                 console.log(err)
@@ -45,27 +45,27 @@ const uploadToAWS = async (images) => {
     const startTime = moment().unix()
 
     console.log("Comecou os uploads em: " + moment().unix())
-    // uploadTesting(images, 0, 500, iterations)
-    images.forEach(async o => {
-        let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
-        // console.log(`Imagem ${o} começou em ${moment()}`)
-        s3.upload({
-            Bucket: process.env.AWS_BUCKET_NAME,
-            Key: 'images/' + o,
-            Body: fileContent
-        }).promise().then(
-            async function (data) {
-                // console.log("Uploaded image: " + o)
-                await successCount++;
-                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-            },
-            function (err) {
-                errorCount++;
-                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-                console.log("erro ao subir imagem" + o)
-            }
-        )
-    })
+    uploadTesting(images, 0, 500, 0)
+    // images.forEach(async o => {
+    //     let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
+    //     // console.log(`Imagem ${o} começou em ${moment()}`)
+    //     s3.upload({
+    //         Bucket: process.env.AWS_BUCKET_NAME,
+    //         Key: 'images/' + o,
+    //         Body: fileContent
+    //     }).promise().then(
+    //         async function (data) {
+    //             // console.log("Uploaded image: " + o)
+    //             await successCount++;
+    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+    //         },
+    //         function (err) {
+    //             errorCount++;
+    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+    //             console.log("erro ao subir imagem" + o)
+    //         }
+    //     )
+    // })
     return startTime
 }
 
