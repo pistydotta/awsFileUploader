@@ -25,11 +25,14 @@ const uploadTesting = async (images, start, finish, iterations) => {
         }).promise().then(
             async function (data) {
                 await count++;
+                console.log("uploaded image: " + count)
                 // console.log(count)
-                if (count == imagesToUpload && iterations == 0) {
-                    uploadTesting(images, 500, 999, 1)
+                if (finish == 999 && count == imagesToUpload) {
+                    console.log("Terminou em: " + moment().unix())
                 }
-                if (count == 499 && iterations == 1) console.log("Terminou em: " + moment().unix())
+                else if (count == imagesToUpload) {
+                    return uploadTesting(images, finish, finish + 333, iterations + 1)
+                }
             },
             function (err) {
                 console.log(err)
@@ -45,7 +48,8 @@ const uploadToAWS = async (images) => {
     const startTime = moment().unix()
 
     console.log("Comecou os uploads em: " + moment().unix())
-    uploadTesting(images, 0, 500, 0)
+    // console.log(images.length)
+    uploadTesting(images, 0, 333, 0)
     // images.forEach(async o => {
     //     let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
     //     // console.log(`Imagem ${o} começou em ${moment()}`)
@@ -231,7 +235,7 @@ module.exports = {
         for (o of splittedData) {
             let tmp = o.split(':')
             if (tmp.length > 1) {
-                if(tmp[0] == 'Runtime') console.log(_.replace(tmp[1], '.', ','))
+                if (tmp[0] == 'Runtime') console.log(_.replace(tmp[1], '.', ','))
             }
         }
         // console.log(splittedData)
