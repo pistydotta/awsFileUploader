@@ -55,7 +55,9 @@ const uploadToAWS = async (images) => {
             Body: fileContent
         }).promise().then(
             async function (data) {
-               console.log(`${moment().unix()}\n`)
+                // console.log("Uploaded image: " + o)
+                await successCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
             },
             function (err) {
                 errorCount++;
