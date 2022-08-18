@@ -49,27 +49,27 @@ const uploadToAWS = async (images) => {
 
     console.log("Comecou os uploads em: " + moment().unix())
     // console.log(images.length)
-    uploadTesting(images, 0, 333, 0)
-    // images.forEach(async o => {
-    //     let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
-    //     // console.log(`Imagem ${o} começou em ${moment()}`)
-    //     s3.upload({
-    //         Bucket: process.env.AWS_BUCKET_NAME,
-    //         Key: 'images/' + o,
-    //         Body: fileContent
-    //     }).promise().then(
-    //         async function (data) {
-    //             // console.log("Uploaded image: " + o)
-    //             await successCount++;
-    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-    //         },
-    //         function (err) {
-    //             errorCount++;
-    //             if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
-    //             console.log("erro ao subir imagem" + o)
-    //         }
-    //     )
-    // })
+    // uploadTesting(images, 0, 333, 0)
+    images.forEach(async o => {
+        let fileContent = fs.readFileSync(process.env.IMAGE_DIRECTORY + o)
+        // console.log(`Imagem ${o} começou em ${moment()}`)
+        s3.upload({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: 'images/' + o,
+            Body: fileContent
+        }).promise().then(
+            async function (data) {
+                // console.log("Uploaded image: " + o)
+                await successCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+            },
+            function (err) {
+                errorCount++;
+                if ((successCount - errorCount) == images.length) console.log(`Terminou em ${moment().unix()}\n${successCount} e ${errorCount}`)
+                console.log("erro ao subir imagem" + o)
+            }
+        )
+    })
     return startTime
 }
 
@@ -92,7 +92,8 @@ module.exports = {
     downloadResultsFromS3: async (req, res) => {
         if (!req.body.dirPath) return res.send("Your body should have a key named dirPath representing path from S3 you want to download")
         const dirPath = req.body.dirPath
-        const fileNum = dirPath.split('/')[2]
+        console.log(dirPath)
+        const fileNum = dirPath.split('/')[3]
         console.log("fileNum: " + fileNum)
         for (i = 0; i < 10; i++) {
             const data = await s3.listObjectsV2({
@@ -104,7 +105,7 @@ module.exports = {
                 let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
                 console.log(fileName)
                 let readStream = await s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key }).createReadStream()
-                let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/${fileNum}/${i}/${fileName}`))
+                let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/cable/${fileNum}/${i}/${fileName}`))
                 readStream.pipe(writeStream)
             }
         }
@@ -213,7 +214,7 @@ module.exports = {
 
     createFolders: async (req, res) => {
         for (i = 0; i < 10; i++) {
-            let dir1 = `/home/dotta/dev/upload-images-aws/results/999/${i}`
+            let dir1 = `/home/dotta/dev/upload-images-aws/results/cable/999/${i}`
             // let dir2 = `/home/dotta/dev/upload-images-aws/results/500/batch/${i}`
             fs.mkdir(dir1, { recursive: true }, (err) => {
                 if (err) console.log(err)
