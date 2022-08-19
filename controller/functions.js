@@ -93,22 +93,20 @@ module.exports = {
         if (!req.body.dirPath) return res.send("Your body should have a key named dirPath representing path from S3 you want to download")
         const dirPath = req.body.dirPath
         console.log(dirPath)
-        const fileNum = dirPath.split('/')[3]
-        console.log("fileNum: " + fileNum)
-        for (i = 0; i < 10; i++) {
-            const data = await s3.listObjectsV2({
-                Bucket: process.env.AWS_BUCKET_NAME,
-                Prefix: `${dirPath}${i}/`
-            }).promise()
-            console.log(data.Contents.length)
-            for (const obj of data.Contents) {
-                let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
-                console.log(fileName)
-                let readStream = await s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key }).createReadStream()
-                let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/cable/${fileNum}/${i}/${fileName}`))
-                readStream.pipe(writeStream)
-            }
+
+        const data = await s3.listObjectsV2({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Prefix: `${dirPath}`
+        }).promise()
+        console.log(data.Contents.length)
+        for (const obj of data.Contents) {
+            let fileName = obj.Key.split('/')[obj.Key.split('/').length - 1]
+            console.log(fileName)
+            let readStream = await s3.getObject({ Bucket: process.env.AWS_BUCKET_NAME, Key: obj.Key }).createReadStream()
+            let writeStream = await fs.createWriteStream(path.join(__dirname, `../results/cableAgain/${fileName}`))
+            readStream.pipe(writeStream)
         }
+
 
         res.send("Arquivos baixados")
     },
@@ -123,8 +121,8 @@ module.exports = {
             let billingTime = 0
             for (i = 0; i < 10; i++) {
                 let resultsData = []
-                let dirPath = `./results/${qnt}/${i}/`
-                let resultPath = `./upload${qnt}.txt`
+                let dirPath = `./results/cable/${qnt}/${i}/`
+                let resultPath = `./cable/upload${qnt}.txt`
                 const uploadTimes = await fsPromises.readFile(resultPath, { encoding: 'utf8' })
                 let workingUploadTimes = uploadTimes.split('\n')
                 const results = await fsPromises.readdir(dirPath)
@@ -142,20 +140,54 @@ module.exports = {
                 }
                 // console.log(i)
                 // console.log("Total_exec_time: " + totalExecTime)
-                // console.log("Smallest_time: " + smallestTime)
-                // console.log("Largest_time: " + largestTime)
-                // console.log((largestTime - smallestTime))
                 processingRuntime += parseFloat(largestTime - smallestTime)
                 totalRuntime += parseFloat(largestTime - workingUploadTimes[i].split(' ')[0])
                 uploadTime += parseFloat(workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0])
                 billingTime += parseFloat(totalExecTime)
+                // console.log("Runtime processamento: " + processingRuntime)
+                // console.log("Runtime Total: " + totalRuntime)
+                // console.log("Tempo upload imagens: " + uploadTime)
+                // console.log("\n")
                 // console.log("Starting_Upload_time: " + workingUploadTimes[i].split(' ')[0])
                 // console.log("Finishing_Upload_time: " + workingUploadTimes[i].split(' ')[1])
                 // console.log((workingUploadTimes[i].split(' ')[1] - workingUploadTimes[i].split(' ')[0]))
                 // console.log((largestTime - workingUploadTimes[i].split(' ')[0]))
-                console.log((smallestTime - workingUploadTimes[i].split(' ')[1]))
+                // console.log((smallestTime - workingUploadTimes[i].split(' ')[1]))
             }
-            // console.log(`${processingRuntime/10} ${totalRuntime/10} ${uploadTime/10} ${billingTime/10}`)
+            console.log(`${processingRuntime / 10} ${totalRuntime / 10} ${uploadTime / 10} ${billingTime / 10}`)
+        }
+
+
+        res.send("Analyzing results")
+    },
+    analyzeOneServerlessResults: async (req, res) => {
+        let vet = [1, 100, 500, 999]
+        for (qnt of vet) {
+            console.log(qnt + "\n")
+            let processingRuntime = 0
+            let totalRuntime = 0
+            let uploadTime = 0
+            let billingTime = 0
+            let resultsData = []
+            let dirPath = `./results/cableAgain/0/`
+            const results = await fsPromises.readdir(dirPath)
+            for (const file of results) {
+                const data = await fsPromises.readFile(dirPath + file, { encoding: 'utf8' })
+                resultsData.push(data)
+            }
+            let totalExecTime = 0
+            let largestTime = 0
+            let smallestTime = resultsData[0].split('\n')[1]
+            for (o of resultsData) {
+                totalExecTime += Number(o.split('\n')[3])
+                if (o.split('\n')[2] > largestTime) largestTime = o.split('\n')[2]
+                if (o.split('\n')[1] < smallestTime) smallestTime = o.split('\n')[1]
+            }
+            console.log(largestTime)
+            console.log(smallestTime)
+            processingRuntime += parseFloat(largestTime - smallestTime)
+            billingTime += parseFloat(totalExecTime)
+            console.log(`${processingRuntime / 10}`)
         }
 
 
@@ -214,7 +246,7 @@ module.exports = {
 
     createFolders: async (req, res) => {
         for (i = 0; i < 10; i++) {
-            let dir1 = `/home/dotta/dev/upload-images-aws/results/cable/999/${i}`
+            let dir1 = `/home/dotta/dev/upload-images-aws/results/cable/1/${i}`
             // let dir2 = `/home/dotta/dev/upload-images-aws/results/500/batch/${i}`
             fs.mkdir(dir1, { recursive: true }, (err) => {
                 if (err) console.log(err)
