@@ -273,5 +273,15 @@ module.exports = {
         }
         // console.log(splittedData)
         res.send("Blah")
+    },
+    tmpFunction: async (req, res) => {
+        const filePath = './uploadCable/upload500.txt'
+        const data = await fsPromises.readFile(filePath, { encoding: 'utf8' })
+        const splittedData = data.split('\n')
+        for (o of splittedData) {
+            let tmp = o.split(' ')
+            let time = parseInt(tmp[1]) - parseInt(tmp[0])
+            console.log(time)
+        }
     }
 }

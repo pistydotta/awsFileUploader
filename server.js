@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const PORT = process.env.PORT || 3000
-const { uploadImages, teste, downloadResultsFromS3, analyzeServerlessResults,analyzeOneServerlessResults, analyzeLocalResults, createFolders, getResults } = require('./controller/functions.js')
+const { uploadImages, teste, downloadResultsFromS3, analyzeServerlessResults,analyzeOneServerlessResults, analyzeLocalResults, createFolders, getResults, tmpFunction } = require('./controller/functions.js')
 var bodyParser = require('body-parser')
 
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -17,6 +17,7 @@ app.get('/analyzeLocalResults', analyzeLocalResults)
 app.get('/createFolders', createFolders)
 app.get('/teste', teste)
 app.get('/getResults', getResults)
+app.get('/tmpFunction', tmpFunction)
 
 
 app.listen(PORT, () => {
